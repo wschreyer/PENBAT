@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Job name
+#$ -N PENBAT
+
+# Mail options
+###$ -M w.schreyer@tum.de
+# send mail for an error
+###$ -m a
+
+# request more memory than 100 MB
+#$ -l h_pmem=1000M
+###$ -l hostname=hpc7bl01.cluster|hpc7bl12.cluster|hpc7bl14.cluster|hpc7bl06.cluster|hpc7bl10.cluster|hpc7bl07.cluster|hpc7bl16.cluster|hpc7bl11.cluster|hpc7bl13.cluster|hpc7bl09.cluster|hpc7bl08.cluster|hpc7bl03.cluster|hpc7bl15.cluster|hpc7bl05.cluster|hpc7bl02.cluster|hpc7bl04.cluster
+
+# Select working directory
+#$ -cwd
+
+# input path, here the executable must lie
+INPUTPATH=/nfs/freenas/tuph/e18/project/ucn/Penelope/wolfgang/PENBAT/
+
+# output path, where the output files are written
+OUTPUTPATH=/nfs/freenas/tuph/e18/project/ucn/Penelope/wolfgang/PENBAT/
+
+# write output to following directory
+#$ -o /nfs/freenas/tuph/e18/project/ucn/Penelope/wolfgang/PENBAT/
+#$ -j y
+
+# Select queue
+###$ -l ulong=TRUE
+###$ -l long=TRUE
+###$ -l medium=TRUE
+#$ -l short=TRUE
+
+. prepare_root 6
+###. /opt/rh/devtoolset-3/enable
+export PATH=/nfs/freenas/tuph/e18/project/ucn/Penelope/wolfgang/BAT/bin:$PATH
+echo $PATH
+export LD_LIBRARY_PATH=/nfs/freenas/tuph/e18/project/ucn/Penelope/wolfgang/BAT/lib:$LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
+export OMP_NUM_THREADS=2
+
+# redirect output to specified paths
+#exec 1>$OUTPUTPATH/${JOB_ID}${SGE_TASK_ID}.${HOSTNAME}.log 2>&1
+
+# Print some information
+echo Running on host `hostname`!
+echo
+date
+echo ------------------------------------------------------------
+echo
+
+#make clean
+#make
+
+cd $INPUTPATH
+
+let "FILENO=($SGE_TASK_ID - 1) / 6 + 1"
+echo $FILENO
+let "MODEL=($SGE_TASK_ID - 1) % 6"
+echo $MODEL
+
+# Do some work here
+$INPUTPATH/simulate PENdata_$SGE_TASK_ID.root $SGE_TASK_ID
+time $INPUTPATH/runPENBAT PENdata_$SGE_TASK_ID.root
+
+
+# Print some information
+echo
+echo ------------------------------------------------------------
+echo
+date
+echo
+echo Finished Job!
+
+exit 0
+
+
